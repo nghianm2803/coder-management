@@ -2,6 +2,7 @@ const express = require("express");
 const {
   createUser,
   getUsers,
+  getUser,
   editUser,
   deleteUser,
 } = require("../controllers/user.controller");
@@ -20,7 +21,7 @@ router.get("/", getUsers);
  * @description Get user by id
  * @access public
  */
-//router.get("/:userId", getUsers);
+router.get("/:id", getUser);
 
 /**
  * @route POST api/users
@@ -28,22 +29,22 @@ router.get("/", getUsers);
  * @access private, manager
  * @requiredBody: name
  */
-// router.post("/", createUser);
+router.post("/", createUser);
 
 /**
- * @route PUT api/users
+ * @route PUT api/users/:id
  * @description Update a user by id
  * @access private, manager
  * @requiredBody: name
  */
-// router.put("/:userId", editUser);
+router.put("/:id", editUser);
 
 /**
- * @route DELETE api/users
+ * @route DELETE api/users/:id
  * @description Delete a user by id
  * @access private, manager
  * @requiredBody: name
  */
-// router.delete("/:userId", deleteUser);
+router.delete("/:id", deleteUser);
 
 module.exports = router;
