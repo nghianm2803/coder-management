@@ -8,7 +8,12 @@ userController.getUsers = async (req, res, next) => {
   const limit = parseInt(req.query.limit) || 20;
   const offset = (page - 1) * limit;
 
+  const searchName = req.query.name;
   const filter = {};
+
+  if (searchName) {
+    filter.name = { $regex: searchName, $options: 'i' };
+  }
 
   try {
     const listOfFound = await User.find(filter).skip(offset).limit(limit);
