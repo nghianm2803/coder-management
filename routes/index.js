@@ -10,8 +10,8 @@ router.get("/", function (req, res, next) {
 const userAPI = require("./user.api.js");
 router.use("/users", userAPI);
 
-// /* Task router */
-// const taskAPI = require("./task.api.js");
-// router.use("/task", taskAPI);
+/* Task router */
+const taskAPI = require("./task.api.js");
+router.use("/tasks", taskAPI);
 
 module.exports = router;

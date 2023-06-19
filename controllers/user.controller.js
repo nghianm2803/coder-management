@@ -12,7 +12,7 @@ userController.getUsers = async (req, res, next) => {
   const filter = {};
 
   if (searchName) {
-    filter.name = { $regex: searchName, $options: 'i' };
+    filter.name = { $regex: searchName, $options: "i" };
   }
 
   try {
@@ -36,7 +36,6 @@ userController.getUser = async (req, res, next) => {
   try {
     const targetId = req.params.id;
     const detailUser = await User.findOne({ _id: targetId });
-    console.log("Hello this is:", detailUser);
 
     sendResponse(
       res,
@@ -60,7 +59,6 @@ userController.createUser = async (req, res, next) => {
     // Validate required fields
     const requiredFields = {
       name: "Name is empty",
-      role: "Role is empty",
     };
 
     const missingFields = [];
@@ -91,7 +89,6 @@ userController.editUser = async (req, res, next) => {
     // Validate required fields
     const requiredFields = {
       name: "Name is empty",
-      role: "Role is empty",
     };
 
     const missingFields = [];

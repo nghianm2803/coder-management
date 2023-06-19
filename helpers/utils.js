@@ -4,14 +4,14 @@ utilsHelper.sendResponse = (
   res,
   status,
   success,
-  users,
+  data,
   errors,
   message,
 ) => {
   const response = {};
   if (success) response.success = success;
   if (message) response.message = message;
-  if (users) response.users = users;
+  if (data) response.data = data;
   if (errors) response.errors = errors;
   return res.status(status).json(response);
 };

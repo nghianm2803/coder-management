@@ -2,6 +2,7 @@ const express = require("express");
 const {
   createTask,
   getTasks,
+  getTask,
   editTask,
   deleteTask,
 } = require("../controllers/task.controller");
@@ -20,7 +21,7 @@ router.get("/", getTasks);
  * @description Get task by id
  * @access public
  */
-router.get("/:taskId", getTasks);
+router.get("/:id", getTask);
 
 /**
  * @route POST api/tasks
@@ -36,7 +37,7 @@ router.post("/", createTask);
  * @access private, manager
  * @requiredBody: name
  */
-router.put("/:taskId", editTask);
+router.put("/:id", editTask);
 
 /**
  * @route DELETE api/tasks
@@ -44,6 +45,6 @@ router.put("/:taskId", editTask);
  * @access private, manager
  * @requiredBody: name
  */
-router.delete("/:taskId", deleteTask);
+router.delete("/:id", deleteTask);
 
 module.exports = router;
