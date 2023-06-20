@@ -1,6 +1,5 @@
 const { sendResponse, AppError } = require("../helpers/utils.js");
 const User = require("../models/User");
-const Task = require("../models/Task");
 
 const userController = {};
 
@@ -18,20 +17,21 @@ userController.getUsers = async (req, res, next) => {
   }
 
   try {
-    const listOfFound = await User.find(filter)
+    let userList = await User.find(filter)
       .sort({ name: 1 })
       .skip(offset)
       .limit(limit)
       .populate("tasksList");
 
-    sendResponse(
-      res,
-      200,
-      true,
-      listOfFound,
-      null,
-      "Get User List Successfully!"
-    );
+    // Extract the task names for each user
+    userList = userList.map((user) => {
+      const taskNames = user.tasksList.map((task) => task.name);
+      return {
+        ...user.toJSON(),
+        tasksList: taskNames,
+      };
+    });
+    sendResponse(res, 200, true, userList, null, "Get User List Successfully!");
   } catch (err) {
     next(err);
   }
@@ -46,9 +46,11 @@ userController.getUser = async (req, res, next) => {
     );
 
     // Extract the string representation of ObjectIds in tasksList
+    const taskAssigned = detailUser.tasksList.map((task) => task.name);
+
     const modifiedUser = {
       ...detailUser.toJSON(),
-      tasksList: detailUser.tasksList.map((task) => task._id.toString()),
+      tasksList: taskAssigned,
     };
 
     sendResponse(

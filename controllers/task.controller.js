@@ -103,11 +103,8 @@ taskController.assignTask = async (req, res, next) => {
     // Update the assignTo field of the task
     task.assignTo = userAssignedID;
     const updatedTask = await task.save();
-    console.log("Tao log updated task: =======>", updatedTask);
-    console.log("Tao log updated task _id: =======>", updatedTask._id.toString());
     // Add the task's ObjectId to the tasksList array of the user
     user.tasksList.push(updatedTask._id.toString()); // Convert ObjectId to string
-    console.log("Tao log user: =======>", user);
     await user.save();
 
     sendResponse(
