@@ -34,7 +34,7 @@ router.post("/", createTask);
 /**
  * @route PUT api/tasks
  * @description Update a task by id
- * @access private, manager
+ * @access public
  * @requiredBody: name
  */
 router.put("/:id", editTask);
@@ -43,7 +43,6 @@ router.put("/:id", editTask);
  * @route DELETE api/tasks
  * @description Delete a task by id
  * @access private, manager
- * @requiredBody: name
  */
 router.delete("/:id", deleteTask);
 

@@ -43,7 +43,6 @@ router.put("/:id", editUser);
  * @route DELETE api/users/:id
  * @description Delete a user by id
  * @access private, manager
- * @requiredBody: name
  */
 router.delete("/:id", deleteUser);
 

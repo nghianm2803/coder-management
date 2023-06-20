@@ -16,7 +16,10 @@ userController.getUsers = async (req, res, next) => {
   }
 
   try {
-    const listOfFound = await User.find(filter).skip(offset).limit(limit);
+    const listOfFound = await User.find(filter)
+      .sort({ name: 1 })
+      .skip(offset)
+      .limit(limit);
 
     sendResponse(
       res,

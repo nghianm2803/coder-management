@@ -100,9 +100,31 @@ taskController.editTask = async (req, res, next) => {
       throw new AppError(400, "Bad Request", missingFields.join(", "));
     }
 
-    //options allow you to modify query. e.g new true return lastest update of data
+    // Retrieve the existing task
+    const existingTask = await Task.findById(targetId);
+    if (!existingTask) {
+      throw new AppError(404, "Not Found", "Task not found");
+    }
+
+    // Check if the status change is valid
+    if (existingTask.status === "Done" && updateTask.status !== "Archive") {
+      throw new AppError(
+        400,
+        "Bad Request",
+        "Invalid status change. The 'Done' status cannot be changed except to 'Archive'."
+      );
+    }
+
+    if (existingTask.status === "Archive" && updateTask.status !== "Archive") {
+      throw new AppError(
+        400,
+        "Bad Request",
+        "Invalid status change. The 'Archive' status cannot be changed."
+      );
+    }
+
+    //options modify query return data after undate
     const options = { new: true };
-    //mongoose query
     const updated = await Task.findByIdAndUpdate(targetId, updateTask, options);
     sendResponse(res, 200, true, updated, null, "Update task success");
   } catch (err) {
