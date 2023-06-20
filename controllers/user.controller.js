@@ -1,5 +1,7 @@
 const { sendResponse, AppError } = require("../helpers/utils.js");
 const User = require("../models/User");
+const Task = require("../models/Task");
+
 const userController = {};
 
 // Get a list of users
@@ -19,7 +21,8 @@ userController.getUsers = async (req, res, next) => {
     const listOfFound = await User.find(filter)
       .sort({ name: 1 })
       .skip(offset)
-      .limit(limit);
+      .limit(limit)
+      .populate("tasksList");
 
     sendResponse(
       res,
@@ -38,13 +41,21 @@ userController.getUsers = async (req, res, next) => {
 userController.getUser = async (req, res, next) => {
   try {
     const targetId = req.params.id;
-    const detailUser = await User.findOne({ _id: targetId });
+    const detailUser = await User.findOne({ _id: targetId }).populate(
+      "tasksList"
+    );
+
+    // Extract the string representation of ObjectIds in tasksList
+    const modifiedUser = {
+      ...detailUser.toJSON(),
+      tasksList: detailUser.tasksList.map((task) => task._id.toString()),
+    };
 
     sendResponse(
       res,
       200,
       true,
-      detailUser,
+      modifiedUser,
       null,
       "Get User Info Successfully!"
     );

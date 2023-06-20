@@ -1,5 +1,6 @@
 const { sendResponse, AppError } = require("../helpers/utils.js");
 const Task = require("../models/Task");
+const User = require("../models/User");
 const taskController = {};
 
 // Get a list of tasks
@@ -11,7 +12,10 @@ taskController.getTasks = async (req, res, next) => {
   const filter = {};
 
   try {
-    const listOfFound = await Task.find(filter).skip(offset).limit(limit);
+    const listOfFound = await Task.find(filter)
+      .skip(offset)
+      .limit(limit)
+      .populate("assignTo");
 
     sendResponse(
       res,
@@ -30,7 +34,9 @@ taskController.getTasks = async (req, res, next) => {
 taskController.getTask = async (req, res, next) => {
   try {
     const targetId = req.params.id;
-    const detailTask = await Task.findOne({ _id: targetId });
+    const detailTask = await Task.findOne({ _id: targetId }).populate(
+      "assignTo"
+    );
 
     sendResponse(
       res,
@@ -72,6 +78,46 @@ taskController.createTask = async (req, res, next) => {
     const createdTask = await Task.create(taskData);
     console.log(taskData);
     sendResponse(res, 200, true, createdTask, null, "Create Task Success");
+  } catch (err) {
+    next(err);
+  }
+};
+
+// Assign task to user
+taskController.assignTask = async (req, res, next) => {
+  const targetId = req.params.id;
+  const { userAssignedID } = req.body;
+
+  try {
+    // Find the task by targetId
+    const task = await Task.findById(targetId);
+    if (!task) {
+      throw new AppError(404, "Not Found", "Task not found");
+    }
+
+    // Find the user by userAssignedID
+    const user = await User.findById(userAssignedID);
+    if (!user) {
+      throw new AppError(404, "Not Found", "User not found");
+    }
+    // Update the assignTo field of the task
+    task.assignTo = userAssignedID;
+    const updatedTask = await task.save();
+    console.log("Tao log updated task: =======>", updatedTask);
+    console.log("Tao log updated task _id: =======>", updatedTask._id.toString());
+    // Add the task's ObjectId to the tasksList array of the user
+    user.tasksList.push(updatedTask._id.toString()); // Convert ObjectId to string
+    console.log("Tao log user: =======>", user);
+    await user.save();
+
+    sendResponse(
+      res,
+      200,
+      true,
+      { data: updatedTask },
+      null,
+      "Assigned to user"
+    );
   } catch (err) {
     next(err);
   }

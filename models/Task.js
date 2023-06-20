@@ -6,10 +6,11 @@ const TaskSchema = mongoose.Schema(
     description: { type: String, required: true },
     status: {
       type: String,
-      enum: ["Pending", "Working", "Review", "Done", "Achieve"],
+      enum: ["Pending", "Working", "Review", "Done", "Archive"],
       default: "Pending",
       required: true,
     },
+    assignTo: { type: mongoose.SchemaTypes.ObjectId, ref: "User" }, //one to one optional
     isDeleted: { type: Boolean, default: false, required: true },
   },
   {

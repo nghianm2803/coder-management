@@ -10,6 +10,7 @@ const UserSchema = mongoose.Schema(
       required: true,
     },
     isDeleted: { type: Boolean, default: false, required: true },
+    tasksList: [{ type: mongoose.SchemaTypes.ObjectId, ref: "Task" }],
   },
   {
     timestamps: true,

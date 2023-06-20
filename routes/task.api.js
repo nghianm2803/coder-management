@@ -5,6 +5,7 @@ const {
   getTask,
   editTask,
   deleteTask,
+  assignTask,
 } = require("../controllers/task.controller");
 const router = express.Router();
 
@@ -45,5 +46,13 @@ router.put("/:id", editTask);
  * @access private, manager
  */
 router.delete("/:id", deleteTask);
+
+/**
+ * @route PUT api/tasks/:id/assign/:userAssignedID
+ * @description Assign a task to a user
+ * @access public
+ * @requiredBody: assigned
+ */
+router.put("/:id/assign/:userAssignedID", assignTask);
 
 module.exports = router;
