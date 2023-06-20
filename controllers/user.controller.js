@@ -23,14 +23,12 @@ userController.getUsers = async (req, res, next) => {
       .limit(limit)
       .populate("tasksList");
 
-    // Extract the task names for each user
+    // Extract the task names from the populated tasksList field
     userList = userList.map((user) => {
-      const taskNames = user.tasksList.map((task) => task.name);
-      return {
-        ...user.toJSON(),
-        tasksList: taskNames,
-      };
+      const tasks = user.tasksList.map((task) => task.name);
+      return { ...user.toJSON(), tasksList: tasks };
     });
+
     sendResponse(res, 200, true, userList, null, "Get User List Successfully!");
   } catch (err) {
     next(err);
@@ -40,8 +38,8 @@ userController.getUsers = async (req, res, next) => {
 // Get a user by id
 userController.getUser = async (req, res, next) => {
   try {
-    const targetId = req.params.id;
-    const detailUser = await User.findOne({ _id: targetId }).populate(
+    const userId = req.params.id;
+    const detailUser = await User.findOne({ _id: userId }).populate(
       "tasksList"
     );
 
@@ -99,7 +97,7 @@ userController.createUser = async (req, res, next) => {
 // Update a user by id
 userController.editUser = async (req, res, next) => {
   try {
-    const targetId = req.params.id;
+    const userId = req.params.id;
     const updateUser = req.body;
 
     // Validate required fields
@@ -121,7 +119,7 @@ userController.editUser = async (req, res, next) => {
     //options allow you to modify query. e.g new true return lastest update of data
     const options = { new: true };
     //mongoose query
-    const updated = await User.findByIdAndUpdate(targetId, updateUser, options);
+    const updated = await User.findByIdAndUpdate(userId, updateUser, options);
     sendResponse(res, 200, true, updated, null, "Update user success");
   } catch (err) {
     next(err);
@@ -131,10 +129,10 @@ userController.editUser = async (req, res, next) => {
 // Delete a user by id
 userController.deleteUser = async (req, res, next) => {
   try {
-    const targetId = req.params.id;
+    const userId = req.params.id;
 
     const softDeleteUser = await User.findByIdAndUpdate(
-      targetId,
+      userId,
       { isDeleted: true },
       { new: true }
     );

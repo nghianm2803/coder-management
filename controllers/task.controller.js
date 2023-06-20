@@ -12,19 +12,21 @@ taskController.getTasks = async (req, res, next) => {
   const filter = {};
 
   try {
-    const listOfFound = await Task.find(filter)
+    let taskList = await Task.find(filter)
       .skip(offset)
       .limit(limit)
       .populate("assignTo");
 
-    sendResponse(
-      res,
-      200,
-      true,
-      listOfFound,
-      null,
-      "Get Task List Successfully!"
-    );
+    // Extract the task names from the populated assignTo field
+    taskList = taskList.map((task) => {
+      const assignedTo = task.assignTo;
+      return {
+        ...task.toJSON(),
+        assignTo: assignedTo ? assignedTo.name : "",
+      };
+    });
+
+    sendResponse(res, 200, true, taskList, null, "Get Task List Successfully!");
   } catch (err) {
     next(err);
   }
@@ -33,16 +35,21 @@ taskController.getTasks = async (req, res, next) => {
 // Get a task by id
 taskController.getTask = async (req, res, next) => {
   try {
-    const targetId = req.params.id;
-    const detailTask = await Task.findOne({ _id: targetId }).populate(
-      "assignTo"
-    );
+    const taskId = req.params.id;
+    const detailTask = await Task.findOne({ _id: taskId }).populate("assignTo");
+
+    // Extract the username from the populated assignTo field
+    const assignedTo = detailTask.assignTo;
+    const modifiedTask = {
+      ...detailTask.toJSON(),
+      assignTo: assignedTo ? assignedTo.name : "",
+    };
 
     sendResponse(
       res,
       200,
       true,
-      detailTask,
+      modifiedTask,
       null,
       "Get Task Info Successfully!"
     );
@@ -85,36 +92,45 @@ taskController.createTask = async (req, res, next) => {
 
 // Assign task to user
 taskController.assignTask = async (req, res, next) => {
-  const targetId = req.params.id;
-  const { userAssignedID } = req.body;
+  const taskId = req.params.id;
+  const { userId } = req.body;
 
   try {
-    // Find the task by targetId
-    const task = await Task.findById(targetId);
+    // Find the task by taskId
+    const task = await Task.findById(taskId);
     if (!task) {
       throw new AppError(404, "Not Found", "Task not found");
     }
 
-    // Find the user by userAssignedID
-    const user = await User.findById(userAssignedID);
+    // Find the user by userId
+    const user = await User.findById(userId);
     if (!user) {
       throw new AppError(404, "Not Found", "User not found");
     }
-    // Update the assignTo field of the task
-    task.assignTo = userAssignedID;
-    const updatedTask = await task.save();
-    // Add the task's ObjectId to the tasksList array of the user
-    user.tasksList.push(updatedTask._id.toString()); // Convert ObjectId to string
-    await user.save();
 
-    sendResponse(
-      res,
-      200,
-      true,
-      { data: updatedTask },
-      null,
-      "Assigned to user"
-    );
+    // Assign or unassign the task
+    if (task.assignTo && task.assignTo.equals(userId)) {
+      // Unassign the task
+      task.assignTo = null;
+      const updatedTask = await task.save();
+
+      // Remove the task ID from the user's tasksList
+      const taskIndex = user.tasksList.indexOf(updatedTask._id.toString());
+      if (taskIndex !== -1) {
+        user.tasksList.splice(taskIndex, 1);
+      }
+      await user.save();
+
+      sendResponse(res, 200, true, null, "Task unassigned successfully");
+    } else {
+      // Assign the task
+      task.assignTo = userId;
+      const updatedTask = await task.save();
+      user.tasksList.push(updatedTask._id.toString());
+      await user.save();
+
+      sendResponse(res, 200, true, null, "Task assigned successfully");
+    }
   } catch (err) {
     next(err);
   }
@@ -123,7 +139,7 @@ taskController.assignTask = async (req, res, next) => {
 // Update a task by id
 taskController.editTask = async (req, res, next) => {
   try {
-    const targetId = req.params.id;
+    const taskId = req.params.id;
     const updateTask = req.body;
 
     // Validate required fields
@@ -144,7 +160,7 @@ taskController.editTask = async (req, res, next) => {
     }
 
     // Retrieve the existing task
-    const existingTask = await Task.findById(targetId);
+    const existingTask = await Task.findById(taskId);
     if (!existingTask) {
       throw new AppError(404, "Not Found", "Task not found");
     }
@@ -168,7 +184,7 @@ taskController.editTask = async (req, res, next) => {
 
     //options modify query return data after undate
     const options = { new: true };
-    const updated = await Task.findByIdAndUpdate(targetId, updateTask, options);
+    const updated = await Task.findByIdAndUpdate(taskId, updateTask, options);
     sendResponse(res, 200, true, updated, null, "Update task success");
   } catch (err) {
     next(err);
@@ -178,10 +194,10 @@ taskController.editTask = async (req, res, next) => {
 // Delete a task by id
 taskController.deleteTask = async (req, res, next) => {
   try {
-    const targetId = req.params.id;
+    const taskId = req.params.id;
 
     const softDeleteTask = await Task.findByIdAndUpdate(
-      targetId,
+      taskId,
       { isDeleted: true },
       { new: true }
     );

@@ -48,11 +48,11 @@ router.put("/:id", editTask);
 router.delete("/:id", deleteTask);
 
 /**
- * @route PUT api/tasks/:id/assign/:userAssignedID
- * @description Assign a task to a user
+ * @route PUT api/tasks/:id/assign
+ * @description Assign or unassign a task to a user
  * @access public
- * @requiredBody: assigned
+ * @requiredBody: userId
  */
-router.put("/:id/assign/:userAssignedID", assignTask);
+router.put("/:id/assign", assignTask);
 
 module.exports = router;
