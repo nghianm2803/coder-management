@@ -1,6 +1,7 @@
 const { sendResponse, AppError } = require("../helpers/utils.js");
 const Task = require("../models/Task");
 const User = require("../models/User");
+const { body, validationResult } = require("express-validator");
 const taskController = {};
 
 // Get a list of tasks
@@ -84,29 +85,25 @@ taskController.getTask = async (req, res, next) => {
 // Add a new task
 taskController.createTask = async (req, res, next) => {
   try {
-    // Validate input
+    await Promise.all([
+      body("name").notEmpty().withMessage("Task name is empty").run(req),
+      body("description")
+        .notEmpty()
+        .withMessage("Description is empty")
+        .run(req),
+    ]);
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      const errorMessages = errors.array().map((error) => error.msg);
+      throw new AppError(400, "Bad Request", errorMessages.join(", "));
+    }
+
     const taskData = req.body;
-
-    // Validate required fields
-    const requiredFields = {
-      name: "Task name is empty",
-      description: "Description is empty",
-    };
-
-    const missingFields = [];
-    for (const [field, errorMessage] of Object.entries(requiredFields)) {
-      if (!taskData[field]) {
-        missingFields.push(errorMessage);
-      }
-    }
-
-    if (missingFields.length > 0) {
-      throw new AppError(400, "Bad Request", missingFields.join(", "));
-    }
 
     if (!taskData) throw new AppError(402, "Bad Request", "Create Task Error");
     const createdTask = await Task.create(taskData);
-    console.log(taskData);
+    // console.log(taskData);
     sendResponse(res, 200, true, createdTask, null, "Create Task Success");
   } catch (err) {
     next(err);
@@ -165,21 +162,18 @@ taskController.editTask = async (req, res, next) => {
     const taskId = req.params.id;
     const updateTask = req.body;
 
-    // Validate required fields
-    const requiredFields = {
-      name: "Task name is empty",
-      description: "Description is empty",
-    };
+    await Promise.all([
+      body("name").notEmpty().withMessage("Task name is empty").run(req),
+      body("description")
+        .notEmpty()
+        .withMessage("Description is empty")
+        .run(req),
+    ]);
 
-    const missingFields = [];
-    for (const [field, errorMessage] of Object.entries(requiredFields)) {
-      if (!updateTask[field]) {
-        missingFields.push(errorMessage);
-      }
-    }
-
-    if (missingFields.length > 0) {
-      throw new AppError(400, "Bad Request", missingFields.join(", "));
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      const errorMessages = errors.array().map((error) => error.msg);
+      throw new AppError(400, "Bad Request", errorMessages.join(", "));
     }
 
     // Retrieve the existing task
@@ -205,7 +199,7 @@ taskController.editTask = async (req, res, next) => {
       );
     }
 
-    //options modify query return data after undate
+    // Options modify query return data after update
     const options = { new: true };
     const updated = await Task.findByIdAndUpdate(taskId, updateTask, options);
     sendResponse(res, 200, true, updated, null, "Update task success");

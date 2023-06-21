@@ -1,6 +1,6 @@
 const { sendResponse, AppError } = require("../helpers/utils.js");
 const User = require("../models/User");
-
+const { body, validationResult } = require("express-validator");
 const userController = {};
 
 // Get a list of users
@@ -70,20 +70,14 @@ userController.createUser = async (req, res, next) => {
     // Validate input
     const userData = req.body;
 
-    // Validate required fields
-    const requiredFields = {
-      name: "Name is empty",
-    };
+    await Promise.all([
+      body("name").notEmpty().withMessage("User name is empty").run(req),
+    ]);
 
-    const missingFields = [];
-    for (const [field, errorMessage] of Object.entries(requiredFields)) {
-      if (!userData[field]) {
-        missingFields.push(errorMessage);
-      }
-    }
-
-    if (missingFields.length > 0) {
-      throw new AppError(400, "Bad Request", missingFields.join(", "));
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      const errorMessages = errors.array().map((error) => error.msg);
+      throw new AppError(400, "Bad Request", errorMessages.join(", "));
     }
 
     if (!userData) throw new AppError(402, "Bad Request", "Create User Error");
@@ -101,24 +95,18 @@ userController.editUser = async (req, res, next) => {
     const updateUser = req.body;
 
     // Validate required fields
-    const requiredFields = {
-      name: "Name is empty",
-    };
+    await Promise.all([
+      body("name").notEmpty().withMessage("User name is empty").run(req),
+    ]);
 
-    const missingFields = [];
-    for (const [field, errorMessage] of Object.entries(requiredFields)) {
-      if (!updateUser[field]) {
-        missingFields.push(errorMessage);
-      }
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      const errorMessages = errors.array().map((error) => error.msg);
+      throw new AppError(400, "Bad Request", errorMessages.join(", "));
     }
 
-    if (missingFields.length > 0) {
-      throw new AppError(400, "Bad Request", missingFields.join(", "));
-    }
-
-    //options allow you to modify query. e.g new true return lastest update of data
+    // Options modify query return data after update
     const options = { new: true };
-    //mongoose query
     const updated = await User.findByIdAndUpdate(userId, updateUser, options);
     sendResponse(res, 200, true, updated, null, "Update user success");
   } catch (err) {
