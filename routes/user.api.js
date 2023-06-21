@@ -6,7 +6,16 @@ const {
   editUser,
   deleteUser,
 } = require("../controllers/user.controller");
+const mongoose = require("mongoose");
 const router = express.Router();
+
+// Middleware to validate ID
+const validateId = (req, res, next) => {
+  if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+    return res.status(400).json({ message: "Invalid ID type" });
+  }
+  next();
+};
 
 /**
  * @route GET api/users
@@ -21,7 +30,7 @@ router.get("/", getUsers);
  * @description Get user by id
  * @access public
  */
-router.get("/:id", getUser);
+router.get("/:id", validateId, getUser);
 
 /**
  * @route POST api/users
@@ -37,13 +46,13 @@ router.post("/", createUser);
  * @access private, manager
  * @requiredBody: name
  */
-router.put("/:id", editUser);
+router.put("/:id", validateId, editUser);
 
 /**
  * @route DELETE api/users/:id
  * @description Delete a user by id
  * @access private, manager
  */
-router.delete("/:id", deleteUser);
+router.delete("/:id", validateId, deleteUser);
 
 module.exports = router;

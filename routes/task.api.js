@@ -7,7 +7,16 @@ const {
   deleteTask,
   assignTask,
 } = require("../controllers/task.controller");
+const mongoose = require("mongoose");
 const router = express.Router();
+
+// Middleware to validate ID
+const validateId = (req, res, next) => {
+  if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+    return res.status(400).json({ message: "Invalid ID type" });
+  }
+  next();
+};
 
 /**
  * @route GET api/tasks
@@ -22,7 +31,7 @@ router.get("/", getTasks);
  * @description Get task by id
  * @access public
  */
-router.get("/:id", getTask);
+router.get("/:id", validateId, getTask);
 
 /**
  * @route POST api/tasks
@@ -38,14 +47,14 @@ router.post("/", createTask);
  * @access public
  * @requiredBody: name
  */
-router.put("/:id", editTask);
+router.put("/:id", validateId, editTask);
 
 /**
  * @route DELETE api/tasks
  * @description Delete a task by id
  * @access private, manager
  */
-router.delete("/:id", deleteTask);
+router.delete("/:id", validateId, deleteTask);
 
 /**
  * @route PUT api/tasks/:id/assign
@@ -53,6 +62,6 @@ router.delete("/:id", deleteTask);
  * @access public
  * @requiredBody: userId
  */
-router.put("/:id/assign", assignTask);
+router.put("/:id/assign", validateId, assignTask);
 
 module.exports = router;
