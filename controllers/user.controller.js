@@ -70,9 +70,16 @@ userController.createUser = async (req, res, next) => {
     // Validate input
     const userData = req.body;
 
-    await Promise.all([
-      body("name").notEmpty().withMessage("User name is empty").run(req),
-    ]);
+    await body("name")
+      .notEmpty()
+      .withMessage("User name is empty")
+      .custom(async (value) => {
+        const existingName = await User.findOne({ name: value });
+        if (existingName) {
+          throw new Error("User name already exists");
+        }
+      })
+      .run(req);
 
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -95,9 +102,16 @@ userController.editUser = async (req, res, next) => {
     const updateUser = req.body;
 
     // Validate required fields
-    await Promise.all([
-      body("name").notEmpty().withMessage("User name is empty").run(req),
-    ]);
+    await body("name")
+      .notEmpty()
+      .withMessage("User name is empty")
+      .custom(async (value) => {
+        const existingName = await User.findOne({ name: value });
+        if (existingName) {
+          throw new Error("User name already exists");
+        }
+      })
+      .run(req);
 
     const errors = validationResult(req);
     if (!errors.isEmpty()) {

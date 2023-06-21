@@ -86,7 +86,16 @@ taskController.getTask = async (req, res, next) => {
 taskController.createTask = async (req, res, next) => {
   try {
     await Promise.all([
-      body("name").notEmpty().withMessage("Task name is empty").run(req),
+      body("name")
+        .notEmpty()
+        .withMessage("Task name is empty")
+        .custom(async (value) => {
+          const existingTask = await Task.findOne({ name: value });
+          if (existingTask) {
+            throw new Error("Task name already exists");
+          }
+        })
+        .run(req),
       body("description")
         .notEmpty()
         .withMessage("Description is empty")
@@ -163,10 +172,22 @@ taskController.editTask = async (req, res, next) => {
     const updateTask = req.body;
 
     await Promise.all([
-      body("name").notEmpty().withMessage("Task name is empty").run(req),
-      body("description")
+      body("status")
         .notEmpty()
-        .withMessage("Description is empty")
+        .withMessage("Status is empty")
+        .isIn(["Pending", "Working", "Review", "Done", "Archive"])
+        .withMessage("Status must be Pending, Working, Review, Done or Archive")
+        .run(req),
+      body("name")
+        .optional()
+        .custom(async (value) => {
+          if (value) {
+            const existingTask = await Task.findOne({ name: value });
+            if (existingTask) {
+              throw new Error("Task name already exists");
+            }
+          }
+        })
         .run(req),
     ]);
 
