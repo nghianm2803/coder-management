@@ -9,10 +9,33 @@ taskController.getTasks = async (req, res, next) => {
   const limit = parseInt(req.query.limit) || 20;
   const offset = (page - 1) * limit;
 
+  // Filter search by name or status or both
   const filter = {};
 
+  // Filter search by status sort by createdAt : updatedAt and order by asc : desc
+  const status = req.query.status;
+  if (
+    status &&
+    ["Pending", "Working", "Review", "Done", "Archive"].includes(status)
+  ) {
+    filter.status = status;
+  }
+
+  // Filter search by name sort by createdAt : updatedAt and order by asc : desc
+  const name = req.query.name;
+  if (name) {
+    filter.name = { $regex: name, $options: "i" };
+  }
+
+  const sortBy = req.query.sortBy === "updatedAt" ? "updatedAt" : "createdAt";
+  const sortOrder = req.query.sortOrder === "desc" ? -1 : 1;
+
+  const sortOptions = {};
+  sortOptions[sortBy] = sortOrder;
+
   try {
-    let taskList = await Task.find(filter)
+    let taskList = await Task.find(filter || {})
+      .sort(sortOptions)
       .skip(offset)
       .limit(limit)
       .populate("assignTo");
